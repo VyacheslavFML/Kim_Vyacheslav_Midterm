@@ -9,7 +9,6 @@ import com.example.kim.exception.BusinessException;
 import com.example.kim.exception.DuplicateEmailException;
 import com.example.kim.exception.StudentNotFoundException;
 import com.example.kim.mapper.StudentMapper;
-import com.example.kim.repository.CourseRepository;
 import com.example.kim.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,6 @@ import java.util.Optional;
 public class StudentServiceImpl implements com.example.kim.service.StudentService {
 
     private final StudentRepository studentRepository;
-    private final CourseRepository courseRepository;
     private final StudentMapper studentMapper;
 
     @Override
@@ -80,12 +78,6 @@ public class StudentServiceImpl implements com.example.kim.service.StudentServic
     @Transactional
     public void delete(Long id) {
         Student student = findStudentOrThrow(id);
-
-        long coursesCount = courseRepository.countByStudentId(id);
-        if (coursesCount > 0) {
-            throw new BusinessException("Cannot delete student because he has courses");
-        }
-
         studentRepository.delete(student);
     }
 

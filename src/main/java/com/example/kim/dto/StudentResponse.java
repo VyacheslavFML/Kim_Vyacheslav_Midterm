@@ -23,5 +23,4 @@ public class StudentResponse {
     private Integer age;
     private LocalDateTime createdAt;
     private ProfileResponse profile;
-    private List<CourseResponse> courses;
 }

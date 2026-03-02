@@ -1,10 +1,8 @@
 package com.example.kim.mapper;
 
-import com.example.kim.dto.CourseResponse;
 import com.example.kim.dto.ProfileResponse;
 import com.example.kim.dto.StudentCreateRequest;
 import com.example.kim.dto.StudentResponse;
-import com.example.kim.entity.Course;
 import com.example.kim.entity.Profile;
 import com.example.kim.entity.Student;
 import org.springframework.stereotype.Component;
@@ -44,7 +42,6 @@ public class StudentMapper {
                 .age(student.getAge())
                 .createdAt(student.getCreatedAt())
                 .profile(toProfileResponse(student.getProfile()))
-                .courses(toCourseResponses(student.getCourses()))
                 .build();
     }
 
@@ -58,20 +55,5 @@ public class StudentMapper {
                 .phone(profile.getPhone())
                 .address(profile.getAddress())
                 .build();
-    }
-
-    private List<CourseResponse> toCourseResponses(List<Course> courses) {
-        if (courses == null) {
-            return List.of();
-        }
-
-        return courses.stream()
-                .filter(Objects::nonNull)
-                .map(course -> CourseResponse.builder()
-                        .id(course.getId())
-                        .title(course.getTitle())
-                        .credits(course.getCredits())
-                        .build())
-                .toList();
     }
 }
