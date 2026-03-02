@@ -1,0 +1,102 @@
+package com.example.kim.service;
+
+import com.example.kim.dto.StudentCreateRequest;
+import com.example.kim.dto.StudentResponse;
+import com.example.kim.dto.StudentUpdateRequest;
+import com.example.kim.entity.Profile;
+import com.example.kim.entity.Student;
+import com.example.kim.exception.BusinessException;
+import com.example.kim.exception.DuplicateEmailException;
+import com.example.kim.exception.StudentNotFoundException;
+import com.example.kim.mapper.StudentMapper;
+import com.example.kim.repository.CourseRepository;
+import com.example.kim.repository.StudentRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class StudentServiceImpl implements com.example.kim.service.StudentService {
+
+    private final StudentRepository studentRepository;
+    private final CourseRepository courseRepository;
+    private final StudentMapper studentMapper;
+
+    @Override
+    @Transactional
+    public StudentResponse create(StudentCreateRequest request) {
+        validateUniqueEmail(request.getEmail());
+
+        Student student = studentMapper.toEntity(request);
+        Student saved = studentRepository.save(student);
+        return studentMapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public StudentResponse update(Long id, StudentUpdateRequest request) {
+        Student student = findStudentOrThrow(id);
+
+        if (request.getEmail() != null && !request.getEmail().equals(student.getEmail())) {
+            validateUniqueEmail(request.getEmail());
+            student.setEmail(request.getEmail());
+        }
+
+        Optional.ofNullable(request.getFirstName()).ifPresent(student::setFirstName);
+        Optional.ofNullable(request.getLastName()).ifPresent(student::setLastName);
+        Optional.ofNullable(request.getAge()).ifPresent(student::setAge);
+
+        Profile profile = student.getProfile();
+        if (profile != null) {
+            Optional.ofNullable(request.getPhone()).ifPresent(profile::setPhone);
+            Optional.ofNullable(request.getAddress()).ifPresent(profile::setAddress);
+        }
+
+        Student updated = studentRepository.save(student);
+        return studentMapper.toResponse(updated);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentResponse getById(Long id) {
+        Student student = findStudentOrThrow(id);
+        return studentMapper.toResponse(student);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StudentResponse> getAll() {
+        return studentRepository.findAll()
+                .stream()
+                .map(studentMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        Student student = findStudentOrThrow(id);
+
+        long coursesCount = courseRepository.countByStudentId(id);
+        if (coursesCount > 0) {
+            throw new BusinessException("Cannot delete student because he has courses");
+        }
+
+        studentRepository.delete(student);
+    }
+
+    private Student findStudentOrThrow(Long id) {
+        return studentRepository.findById(id)
+                .orElseThrow(() -> new StudentNotFoundException(id));
+    }
+
+    private void validateUniqueEmail(String email) {
+        if (studentRepository.existsByEmail(email)) {
+            throw new DuplicateEmailException(email);
+        }
+    }
+}
