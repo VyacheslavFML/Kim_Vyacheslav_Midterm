@@ -5,7 +5,6 @@ import com.example.kim.dto.StudentResponse;
 import com.example.kim.dto.StudentUpdateRequest;
 import com.example.kim.entity.Profile;
 import com.example.kim.entity.Student;
-import com.example.kim.exception.BusinessException;
 import com.example.kim.exception.DuplicateEmailException;
 import com.example.kim.exception.StudentNotFoundException;
 import com.example.kim.mapper.StudentMapper;
